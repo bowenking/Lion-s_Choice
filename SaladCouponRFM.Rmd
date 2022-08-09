@@ -1,11 +1,11 @@
 ---
 title: "Salad Coupon RFM"
 output:
-  html_document:
-    df_print: paged
+  pdf_document: default
   html_notebook: default
   word_document: default
-  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 User Data Analytics
@@ -22,7 +22,7 @@ library(statar)
 library(ggpubr) 
 
 salad_coupon <- read.csv("/Users/bowenjin/Desktop/Lion's Choice/rfm_trans.csv")
-salad_coupon
+head(salad_coupon,10)
 dim(salad_coupon)
 ```
 
@@ -46,7 +46,7 @@ salad_coupon1 <- salad_coupon %>%
             rec_quin = xtile(Last.Guest.Activity.Date, 5),
             freq_quin = xtile(X10...Visits.10...Balance, 5),
             mv_quin = xtile(X1...Dollars.Spent.1...Balance, 5))
-salad_coupon1
+head(salad_coupon1,10)
 ```
 
 ```{r}
@@ -75,7 +75,7 @@ salad_coupon1 %>% group_by(mv_quin) %>% summarise(avg_mv = mean(monetary), .grou
 salad_coupon1 <- salad_coupon1 %>% 
   mutate(rfmindex_iq = 100*rec_quin + 10*freq_quin + mv_quin)
 
-salad_coupon1
+head(salad_coupon1,10)
 ```
 
 ```{r}
@@ -84,7 +84,7 @@ avg_resp_rate_rfm <- salad_coupon1 %>%
   group_by(rfmindex_iq) %>% 
   summarise(resp_rate_rfm_iq=mean(coupon), .groups="drop") %>% 
   arrange(desc(resp_rate_rfm_iq))
-avg_resp_rate_rfm
+head(avg_resp_rate_rfm,10)
 
 bar_avg_resp_rate_rfm <- 
   ggplot(data=avg_resp_rate_rfm, 
@@ -105,7 +105,7 @@ salad_coupon1 <- salad_coupon1 %>%
   group_by(rfmindex_iq) %>% 
   mutate(resp_rate_by_rfm_iq = mean(coupon)) %>% ungroup()
 
-salad_coupon1
+head(salad_coupon1,10)
 ```
 
 
