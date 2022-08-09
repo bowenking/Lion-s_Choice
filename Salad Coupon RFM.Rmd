@@ -1,0 +1,113 @@
+---
+title: "Salad Coupon RFM"
+output:
+  pdf_document: default
+  html_notebook: default
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+User Data Analytics
+
+
+```{r}
+library(tidyverse)
+library(knitr) 
+library(kableExtra) 
+library(flextable) 
+library(gmodels) 
+library(Hmisc) 
+library(statar) 
+library(ggpubr) 
+
+salad_coupon <- read.csv("/Users/bowenjin/Desktop/Lion's Choice/rfm_trans.csv")
+salad_coupon
+dim(salad_coupon)
+```
+
+
+```{r}
+#response rate of the coupon
+CrossTable(salad_coupon$X13....2.Off.Butcher.Block.Sala.13...Redeemed)
+```
+Response rate is 0.5%
+
+
+
+```{r}
+# Create the quintiles for R, F, M
+salad_coupon1 <- salad_coupon %>% 
+  summarise(CardNumber = Card.Number,
+            recency = Last.Guest.Activity.Date,
+            frequency = X10...Visits.10...Balance,
+            monetary = X1...Dollars.Spent.1...Balance,
+            coupon = X13....2.Off.Butcher.Block.Sala.13...Redeemed,
+            rec_quin = xtile(Last.Guest.Activity.Date, 5),
+            freq_quin = xtile(X10...Visits.10...Balance, 5),
+            mv_quin = xtile(X1...Dollars.Spent.1...Balance, 5))
+salad_coupon1
+```
+
+```{r}
+#check and adjust ranking for R, F, M
+
+#Recency rank
+salad_coupon1 %>% group_by(rec_quin) %>% summarise(avg_rec = mean(recency), .groups="drop")
+```
+
+```{r}
+#Frequency rank adjust
+salad_coupon1 %>% group_by(freq_quin) %>% summarise(avg_freq = mean(frequency), .groups="drop")
+salad_coupon1$freq_quin <- max(salad_coupon1$freq_quin) + 1 - salad_coupon1$freq_quin
+salad_coupon1 %>% group_by(freq_quin) %>% summarise(avg_freq = mean(frequency), .groups="drop")
+```
+
+```{r}
+#Monetary rank adjust
+salad_coupon1 %>% group_by(mv_quin) %>% summarise(avg_mv = mean(monetary), .groups="drop")
+salad_coupon1$mv_quin <- max(salad_coupon1$mv_quin) + 1 - salad_coupon1$mv_quin
+salad_coupon1 %>% group_by(mv_quin) %>% summarise(avg_mv = mean(monetary), .groups="drop")
+```
+
+```{r}
+#create rfm index
+salad_coupon1 <- salad_coupon1 %>% 
+  mutate(rfmindex_iq = 100*rec_quin + 10*freq_quin + mv_quin)
+
+salad_coupon1
+```
+
+```{r}
+#response rate in each RFM group
+avg_resp_rate_rfm <- salad_coupon1 %>% 
+  group_by(rfmindex_iq) %>% 
+  summarise(resp_rate_rfm_iq=mean(coupon), .groups="drop") %>% 
+  arrange(desc(resp_rate_rfm_iq))
+avg_resp_rate_rfm
+
+bar_avg_resp_rate_rfm <- 
+  ggplot(data=avg_resp_rate_rfm, 
+         aes(x = as.factor(rfmindex_iq), y = resp_rate_rfm_iq)) + 
+  labs(x="RFM Cells", 
+       y="Average Response Rate", 
+       title = "Response Rates by Independent RFM Cells") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  geom_bar(stat="identity") + 
+  scale_x_discrete(breaks = seq(111, 555, by = 5))
+bar_avg_resp_rate_rfm
+```
+
+
+```{r}
+#response rate for every member
+salad_coupon1 <- salad_coupon1 %>% 
+  group_by(rfmindex_iq) %>% 
+  mutate(resp_rate_by_rfm_iq = mean(coupon)) %>% ungroup()
+
+salad_coupon1
+```
+
+
+
+
