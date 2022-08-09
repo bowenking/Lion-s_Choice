@@ -1,11 +1,11 @@
 ---
 title: "Salad Coupon RFM"
 output:
-  pdf_document: default
-  html_notebook: default
-  word_document: default
   html_document:
     df_print: paged
+  html_notebook: default
+  word_document: default
+  pdf_document: default
 ---
 
 User Data Analytics
